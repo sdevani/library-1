@@ -11,11 +11,10 @@ class Return extends React.Component{
 			let element = event.target;
 			let id = Number(element.dataset.index)
 			let book = this.props.user.books[id]
-			user.returnBook(book)
-			book.checkedOut = false
-			console.log('1')
-			ReactDOM.render(<Directory/>,
-	  			document.getElementById('app'))
+			user.returnBook(book, function(book) {
+				ReactDOM.render(<Directory/>,
+		  			document.getElementById('app'))
+			})
 		}
 
 	render(){

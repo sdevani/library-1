@@ -1,52 +1,30 @@
+let users = {};
+
 class User {
-	constructor(name, id) {
+	constructor(name) {
 		this.name = name;
-		this.id = id;
+		this.books = [];
 		
 	}
 
-	checkoutBook(book){
+	checkoutBook(book, callback){
 		this.books.push(book)
-		//can I create a books array on the client side?
-		//What are we going to do for this portion? Confused..
+		book.checkedOut++;
+		callback(book);
 	}
 
-	returnBook(book){
+	returnBook(book, callback){
 		for(let i = 0; i < this.books.length; i++){
-		if(book === this.books[i]){
-		this.books.pop(book)
+			if(book === this.books[i]){
+				this.books.pop(book)
 			}
 		}
+		book.checkedOut--;
+		callback(book);
 	}
 	
 	getAllBooksByUser(callback){
-		$.get("/user/" + this.id + "/books", function(books) {
-			let bookObjects = books.map(function(book) {
-				return new Book(
-					book.title,
-					book.description,
-					book.checkedOut,
-					book.id,
-					book.quantity
-				)
-			})
-			callback(bookObjects);	
-		})
-	}
-
-	checkoutBook(bookId, callback){ //why aren't we using getAllBooksByUser anymore?
-		$.post("/user/" + this.id + "/book/"){
-			let bookObject = new Book(
-				book.title,
-				book.description,
-				book.id,
-				book.quantity
-			)
-		}
-	}		
-
-	static getAllUsers(){
-		return users
+		callback(this.books);
 	}
 
 	// This function will retrieve the user with the given name from the server.
@@ -57,15 +35,10 @@ class User {
 	//    console.log(user.name);
 	// })
 	static getUserByName(name, callback){
-		$.post('/user', {name:name}, function(userData){
-			let user = new User(
-				userData.name,
-				userData.id,
-				userData.books)
-			// Callback is in this position because it will run when the data is
-			// actually available
-			callback(user)
-		})
+		callback(users[name]);
 	}
 }
 
+users['Maria'] = new User('Maria')
+users['Shehzan'] = new User('Shehzan')
+users['Yogi'] = new User('Yogi')

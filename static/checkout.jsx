@@ -15,9 +15,9 @@ class Checkout extends React.Component{
 	handleClick(event) {
 			event.preventDefault();
 			let name = this.state.newUser.name
-			let bookId = this.state.newUser.book
+			let book = this.state.newUser.book
 			let newUser = User.getUserByName(name, function(user){ //is this done properly?
-				user.checkoutBook(bookId, function(book){
+				user.checkoutBook(book, function(book){
 					ReactDOM.render(<Directory/>,
 	  				document.getElementById('app'))
 				})

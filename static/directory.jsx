@@ -10,10 +10,6 @@ class Directory extends React.Component{
 		this.donateBook = this.donateBook.bind(this)
 		this.bookEdit = this.bookEdit.bind(this)
 		let view = this
-		Book.getAllBooks(function(books){
-			view.state.books = books
-			view.setState(view.state)
-		})
 		this.state = {
 			returnUserForm: {
 				returnUserName:'insert your name here'
@@ -29,6 +25,11 @@ class Directory extends React.Component{
 			books: []
 
 		}
+		Book.getAllBooks(function(books){
+			view.state.books = books
+			// TODO(maria): uncomment this line once we use server side.
+			// view.setState(view.state)
+		})
 		
 	}
 
@@ -46,8 +47,9 @@ class Directory extends React.Component{
 
 	returnBook(event){
 		event.preventDefault();
-		let user = User.getUserByName(this.state.returnUserForm.returnUserName)
-		ReactDOM.render(<Return user={user}/>, document.getElementById('app'))
+		User.getUserByName(this.state.returnUserForm.returnUserName, function(user) {
+			ReactDOM.render(<Return user={user}/>, document.getElementById('app'))
+		})
 	}
 
 	updateInputName(event){
@@ -79,7 +81,7 @@ class Directory extends React.Component{
 
 	donateBook(event){
 		event.preventDefault();
-		let donateBookForm = new Book(this.state.donateBookForm.title, this.state.donateBookForm.description, 0, undefined, Number(this.state.donateBookForm.quantity))
+		let donateBookForm = new Book(this.state.donateBookForm.title, this.state.donateBookForm.description, 0, Number(this.state.donateBookForm.quantity))
 		let view = this
 		for(let i = 0; i < this.state.books.length; i++){
 			if(this.state.books[i].title === this.state.donateBookForm.title){
@@ -98,7 +100,6 @@ class Directory extends React.Component{
 		}	 
 
 		donateBookForm.save(function(book){
-			view.state.books.push(book);
 			view.setState(view.state);
 		})
 		this.state.donateBookForm = {
@@ -116,7 +117,7 @@ class Directory extends React.Component{
 		let donateBook = this.donateBook
 		console.log(this.state.books)
 		let bookList = this.state.books.map(function(list, index){
-			if(list.quantity == 0){
+			if(list.checkedOut == list.quantity){
 				return(
 				<div key ={'list_' + index}> </div>)
 			} else {
