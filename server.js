@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const {Book} = require('./book.js')
 const {Users} = require('./users.js')
-const {CheckoutHistory} = require('./checkoutHistory.js')
+const {History} = require('./userhistory.js')
 let knex = require('knex')({
 	client: 'pg',
 	version: '10.5',
@@ -22,6 +22,7 @@ let books = [
 	new Book("Lord of the Rings", "Jewelry", 0, nextAvailableBookId++, 2),
 	new Book("Pride and Prejudice", "Ego", 0, nextAvailableBookId++, 2),
 ];
+
 let nextAvailableUserId = 1;
 let users = {
 	"Shehzan": new Users("Shehzan", nextAvailableUserId++),
@@ -32,9 +33,16 @@ let nextAvailableCheckoutHistoryId = 1;
 let checkoutHistoryRecords = [];
 
 app.get('/books', function(req, res) {
-	// knex.select('*').from('books').then(function(books) {
-	// })
-	res.json(books);
+	knex.select().table('books').then((booksData) => {
+		let allBooks = booksData.map((bookData) => {
+			return new Book(bookData.title,
+							bookData.description,
+							bookData.checkedout,
+							bookData.id,
+							bookData.quantity);
+		})
+		res.json(allBooks);
+	});
 })
 
 app.post('/user', function(req, res) {
@@ -52,10 +60,23 @@ app.post('/book', function(req, res) {
 	let quantity = Number(req.body.data.quantity);
 	let checkedOut = 0;
 
-	let newBook = new Book(title, description, checkedOut, id, quantity);
-
-	books.push(newBook);
-	res.json(newBook);
+	knex.insert({
+		title: title,
+		description: description,
+		quantity: quantity,
+		checkedout: checkedOut
+	})
+	.returning('*')
+	.into('books')
+	.then(function(bookObject) {
+		let newBook = new Book(
+			bookObject.title,
+			bookObject.description,
+			bookObject.checkedout,
+			bookObject.id,
+			bookObject.quantity);
+		res.json(newBook);
+	});
 })
 
 app.post('/user/:user_id/book/:book_id', function(req, res) {
@@ -83,7 +104,7 @@ app.post('/user/:user_id/book/:book_id', function(req, res) {
 	}
 
 	book.checkedOut++;
-	let checkedOutHistory = new CheckoutHistory(
+	let checkedOutHistory = new History(
 		nextAvailableCheckoutHistoryId++,
 		user.id,
 		book.id);
