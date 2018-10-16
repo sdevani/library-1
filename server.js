@@ -1,3 +1,5 @@
+const BOOK_TABLE = 'books';
+
 const express = require('express')
 const app = express()
 const {Book} = require('./book.js')
@@ -51,7 +53,7 @@ app.post('/book', function(req, res) {
 		checkedout: checkedOut
 	})
 	.returning('*')
-	.into('books')
+	.into(BOOK_TABLE)
 	.then(function(bookObjects) {
 		let bookObject = bookObjects[0];
 		console.log(bookObject);
@@ -100,7 +102,7 @@ app.put('/book/:bookId', function(req, res) {
 })
 
 app.get('/books', function(req, res) {
-	knex.select().table('books').then((booksData) => {
+	knex.select().table(BOOK_TABLE).then((booksData) => {
 		let allBooks = booksData.map((bookData) => {
 			return new Book(bookData.title,
 							bookData.description,
