@@ -3,6 +3,14 @@ const app = express()
 const {Book} = require('./book.js')
 const {Users} = require('./users.js')
 const {History} = require('./userhistory.js')
+let knex = require('knex')({
+	client: 'pg',
+	version: '10.5',
+	connection: {
+		host: '127.0.0.1',
+		database: 'library' 
+	}
+});
 
 let bodyParser = require('body-parser');
 app.use(bodyParser.json());
@@ -30,15 +38,31 @@ let nextIdNumber = 4;
 let nextUserID = 4;
 let nextCheckOutHistory = 4
 
-app.post('/book', function(req, res){
+app.post('/book', function(req, res) {
 	let title = req.body.data.title;
 	let description = req.body.data.description;
-	let checkedOut = Number(req.body.data.checkedOut)
-	let quantity = Number(req.body.data.quantity)
-	let bookDonation = new Book(title,description,checkedOut, nextIdNumber, quantity)
-	nextIdNumber++
-	books.push(bookDonation);
-	res.json(bookDonation)
+	let quantity = Number(req.body.data.quantity);
+	let checkedOut = 0;
+
+	knex.insert({
+		title: title,
+		description: description,
+		quantity: quantity,
+		checkedout: checkedOut
+	})
+	.returning('*')
+	.into('books')
+	.then(function(bookObjects) {
+		let bookObject = bookObjects[0];
+		console.log(bookObject);
+		let newBook = new Book(
+			bookObject.title,
+			bookObject.description,
+			bookObject.checkedout,
+			bookObject.id,
+			bookObject.quantity);
+		res.json(newBook);
+	});
 })
 
 app.put('/book/:bookId', function(req, res) {
@@ -75,8 +99,17 @@ app.put('/book/:bookId', function(req, res) {
 		res.json(book);
 })
 
-app.get('/books', function(req, res){
-	res.json(books);
+app.get('/books', function(req, res) {
+	knex.select().table('books').then((booksData) => {
+		let allBooks = booksData.map((bookData) => {
+			return new Book(bookData.title,
+							bookData.description,
+							bookData.checkedout,
+							bookData.id,
+							bookData.quantity);
+		})
+		res.json(allBooks);
+	});
 })
 
 app.get('/user/:user_id/books', function(req, res){
